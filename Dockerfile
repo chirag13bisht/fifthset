@@ -1,22 +1,19 @@
-# ---- Build stage ----
-FROM node:20-alpine AS build
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci
-
-COPY . .
-RUN npm run build
-
-# ---- Runtime stage ----
 FROM node:20-alpine
 WORKDIR /app
-ENV NODE_ENV=production
 
-COPY package.json package-lock.json ./
+# 1. Install ALL dependencies (including tsx and Vite)
+COPY package*.json ./
 RUN npm ci
 
-COPY --from=build /app/dist ./dist
+# 2. Copy the entire source code into the container
+COPY . .
 
+# 3. Build the frontend (creates the dist/public folder)
+RUN npm run build
+
+# 4. Set to production mode
+ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["node", "dist/api/boot.js"]
+
+# 5. Start the backend server directly using tsx
+CMD ["npx", "tsx", "api/boot.ts"]
