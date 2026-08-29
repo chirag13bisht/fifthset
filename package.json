@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && esbuild api/boot.ts --platform=node --bundle --format=esm --outdir=dist --banner:js=\"import { createRequire } from 'module';const require = createRequire(import.meta.url);\"",
+    "build": "tsc && vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "start": "NODE_ENV=production node dist/boot.js",
+    "preview": "vite preview --host 0.0.0.0 --port 3000",
+    "start": "vite preview --host 0.0.0.0 --port 3000",
     "check": "tsc -b",
     "format": "prettier --write .",
     "test": "vitest run",
@@ -16,6 +16,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push"
   },
+  
   "dependencies": {
     "@hono/node-server": "^1.14.3",
     "@hookform/resolvers": "^5.2.2",

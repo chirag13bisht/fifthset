@@ -8,7 +8,8 @@ import { defineConfig } from "vite"
 export default defineConfig({
   plugins: [
     devServer({ entry: "api/boot.ts", exclude: [/^\/(?!api\/).*$/] }),
-    react()],
+    react()
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -23,6 +24,12 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
+    host: "0.0.0.0",
+    port: 3000,
+    allowedHosts: true,
+  },
+  preview: {
+    host: "0.0.0.0",
     port: 3000,
     allowedHosts: true,
   },
