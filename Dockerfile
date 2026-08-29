@@ -19,4 +19,4 @@ RUN npm ci
 COPY --from=build /app/dist ./dist
 
 EXPOSE 3000
-CMD ["node", "dist/boot.js"]
+CMD ["node", "dist/api/boot.js"]
