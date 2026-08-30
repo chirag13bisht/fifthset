@@ -25,9 +25,11 @@ export const contactRouter = createRouter({
         });
         return { ok: true as const };
       } catch (error: any) {
-        // This bypasses Drizzle's generic message and forces the raw MySQL error 
-        // to display on your frontend so we know exactly what is blocking it.
-        throw new Error(`RAW CRASH: ${error.code || "UNKNOWN"} - ${error.message}`);
+        // Drizzle hides the true mysql2 driver error inside the 'cause' property
+        const realError = error.cause || error;
+        
+        // This forces the physical network/auth error to the frontend
+        throw new Error(`RAW CRASH: [${realError.code || "NO_CODE"}] - ${realError.message || "NO_MESSAGE"}`);
       }
     }),
 });
