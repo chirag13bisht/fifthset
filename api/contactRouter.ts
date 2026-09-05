@@ -16,20 +16,43 @@ export const contactRouter = createRouter({
     .mutation(async ({ input }) => {
       const db = getDb();
       
+      // 1. Save to Cloud SQL
+      await db.insert(contactMessages).values({
+        name: input.name,
+        email: input.email,
+        topic: input.topic || null,
+        message: input.message,
+      });
+
+      // 2. Trigger Telegram
       try {
-        await db.insert(contactMessages).values({
-          name: input.name,
-          email: input.email,
-          topic: input.topic || null,
-          message: input.message,
-        });
-        return { ok: true as const };
-      } catch (error: any) {
-        // Drizzle hides the true mysql2 driver error inside the 'cause' property
-        const realError = error.cause || error;
+        const telegramToken = process.env.TELEGRAM_BOT_TOKEN;
+        const chatId = process.env.TELEGRAM_CHAT_ID;
         
-        // This forces the physical network/auth error to the frontend
-        throw new Error(`RAW CRASH: [${realError.code || "NO_CODE"}] - ${realError.message || "NO_MESSAGE"}`);
+        if (!telegramToken || !chatId) {
+          console.error("CRITICAL: Telegram variables are missing from Cloud Run.");
+        } else {
+          const text = `New Contact: ${input.name}\nEmail: ${input.email}\nTopic: ${input.topic || "None"}\nMessage: ${input.message}`;
+          
+          const response = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chatId, text: text }),
+          });
+
+          // This forces Node to log Telegram's exact rejection reason
+          if (!response.ok) {
+            const errorDetails = await response.text();
+            console.error(`Telegram API Rejected: ${errorDetails}`);
+          } else {
+            console.log("Telegram message dispatched successfully!");
+          }
+        }
+      } catch (error) {
+        console.error("Messaging automation network crash:", error);
       }
+
+      // 3. Return success to frontend
+      return { ok: true as const };
     }),
 });
